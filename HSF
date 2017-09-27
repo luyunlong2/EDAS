@@ -1,0 +1,61 @@
+ 1.什么是HSF
+框架 HSF框架是一个高性能远程通信框架，底层基于Netty实现TCP通信，对上层进行封装，提供易于使用和高度可扩展能力。
+其提供的功能及一些实现基础：
+1.标准Service方式的RPC
+  1）、Service定义：基于OSGI的Service定义方式
+  2）、TCP/IP通信：
+   IO方式：nio,采用mina框架
+   连接方式：长连接
+   服务器端有限定大小的连接池
+   WebService方式
+  3）、序列化：Hessian序列化机制
+2.软件负载体系
+3.模块化、动态化
+4.服务治理
+
+HSF 应用的运行环境:首先，应用运行在潘多拉（Pandora）容器中，容器又通过 Ali-Tomcat 启动。
+环境配置
+
+1.  绑定 jmenv.tbsite.net 域名到对应的地址服务器（没有域名解析的情况下）
+在默认情况下,我们在公网有一个测试环境,您可以在本机绑定地址:
+127.0.0.1 jmenv.tbsite.net
+如果在您的本地安装有地址服务器环境,请绑定本地的地址
+2. 可以安装 EdasStudio 开发插件，这样可以在 eclipse 中直接调试程序无需额外的打包
+到此，HSF 的运行环境就安装完毕。
+
+首先要将HSF功能加进工程，是maven的话，在pom.xml里要依赖HSF:
+Xml代码  收藏代码
+<dependency>  
+            <groupId>com.taobao.hsf</groupId>  
+            <artifactId>hsf.connector.spring</artifactId>  
+            <version>xxx</version>  
+ </dependency>  
+ 对于服务框架肯定是有服务提供者和消费者两种角色，在提供者方要做的工作包括：
+1. 将interface的代码打成Jar包，放进maven仓库中，供使用者下载使用，而具体代码实现则不需要放进jar包中，使用者只能调用，无法看见具体实现。
+2.在对应的HSF的配置文件里，将提供的服务提供出来（基于spring的bean配置）：
+
+<bean id="xxxServiceImpl" class="xxx.xxxServiceImpl" />
+<bean id="xxxServiceProvider"     class="com.taobao.hsf.app.spring.util.HSFSpringProviderBean" init-method="init">
+     <property name="serviceInterface">
+        <value>xxx.xxxService</value>
+     </property>
+     <property name="target">
+        <ref bean="xxxServiceImpl" />
+     </property>
+     <property name="serviceName">
+        <value>xxxService</value>
+     </property>
+     <property name="serviceVersion">
+        <value>xxx</value>
+     </property>
+     <property name="serviceGroup">
+        <value>HSF</value>
+     </property>
+</bean>
+
+服务提供成功后，在HSF服务管理中心可以查看到这个HSF服务。而在消费者方要做的工作：
+
+<bean name="xxxService" class="com.taobao.hsf.app.spring.util.HSFSpringConsumerBean" init-method="init">
+     <property name="interfaceName" value="xxx.xxxService" />
+     <property name="version" value="xxx" />
+</bean>
